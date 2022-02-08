@@ -155,6 +155,19 @@ MyString& MyString::insert(int loc, const MyString& str) {
         for (i = 0; i < loc; i++) {
             string_content[i] = prev_string_content[i];
         }
+
+        for (int j = 0; j != str.string_length; j++) {
+            string_content[i + j] = str.string_content[j];
+        }
+
+        for (; i < string_length; i++) {
+            string_content[str.string_length + i] = prev_string_content[i];
+        }
+
+        delete[] prev_string_content;
+
+        string_length = string_length + str.string_length;
+        return *this;
     }
 }
 
