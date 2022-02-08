@@ -35,6 +35,14 @@ class MyString {
         MyString& insert(int loc, const MyString& str);
         MyString& insert(int loc, const char* str);
         MyString& insert(int loc, char c);
+
+        MyString& erase(int loc, int num);
+
+        int find(int find_from, const MyString& str) const;
+        int find(int find_from, const char* str) const;
+        int find(int find_from, char c) const;
+
+        int compare(const MyString& str) const;
 };
 
 MyString::MyString(char c) {
@@ -130,7 +138,7 @@ void MyString::reserve(int size) {
 }   
 char MyString::at(int i) const {
     if (i >= string_length || i < 0) {
-        return NULL;
+        return 0;
         // i가 허용되는 범위를 초과한다면 NULL을 리턴
     }
     else {
@@ -145,7 +153,11 @@ MyString& MyString::insert(int loc, const MyString& str) {
 
     if (string_length + str.string_length > memory_capacity) {
         // 새롭게 동적으로 할당
-        memory_capacity = string_length + str.string_length;
+
+        if (memory_capacity * 2 > string_length + str.string_length)
+            memory_capacity *= 2;
+        else
+            memory_capacity = string_length + str.string_length;
 
         char* prev_string_content = string_content;
         string_content = new char [memory_capacity];
@@ -169,14 +181,88 @@ MyString& MyString::insert(int loc, const MyString& str) {
         string_length = string_length + str.string_length;
         return *this;
     }
+
+
+
+    for (int i = string_length - 1; i >= loc; i--) {
+        // 뒤로 밀기. 이 때 원래의 문자열 데이터가 사라지지 않게 함
+        string_content[i + str.string_length] = string_content[i];
+    }
+    // 그리고 insert 되는 문자 다시 집어넣기
+    for (int i = 0; i < str.string_length; i++) {
+        string_content[i + loc] = str.string_content[i];
+    }
+
+    string_length = string_length + str.string_length;
+    return *this;
+}
+MyString& MyString::insert(int loc, const char* str) {
+    MyString temp(str);
+    return insert(loc, temp);
+}
+MyString& MyString::insert(int loc, char c) {
+    MyString temp(c);
+    return insert(loc, temp);
 }
 
+MyString& MyString::erase(int loc, int num) {
+    // loc 의 앞부터 시작해서 num 문자를 지운다
+    if (num < 0 || loc < 0 || loc > string_length) return *this;
+
+    // 지운다는 것은 단순히 뒤의 문자들을 앞으로 끌고 온다고
+    // 생각하면 됩니다.
+
+    for (int i = loc + num; i < string_length; i++) {
+        string_content[i - num] = string_content[i];
+    }
+
+    string_length -= num;
+    return *this;
+}
+int MyString::find(int find_from, const MyString& str) const {
+    int i, j;
+    if (str.string_length == 0) return -1;
+    for (i = find_from; i <= string_length - str.string_length; i++) {
+        for (j = 0; j < str.string_length; j++) {
+            if (string_content[i + j] != str.string_content[j]) break;
+        }
+
+        if (j == str.string_length) return i;
+    }
+
+    return -1;  // 찾지 못했음
+}
+int MyString::find(int find_from, const char* str) const {
+    MyString temp(str);
+    return find(find_from, temp);
+}
+int MyString::find(int find_from, char c) const {
+    MyString temp(c);
+    return find(find_from, temp);
+}
+int MyString::compare(const MyString& str) const {
+
+
+
+    for (int i = 0; i < std::min(string_length, str.string_length); i++) {
+        if (string_content[i] > str.string_content[i])
+            return 1;
+        
+        else if (string_content[i] < str.string_content[i])
+            return -1;
+    }
+
+
+    if (string_length == str.string_length) {return 0;}
+
+    else if (string_length > str.string_length)
+        return 1;
+    
+    return -1;
+}
 int main() {
-    MyString str1("very very very long string");
-    str1.reserve(30);
+    MyString str1("abcdef");
+    MyString str2("abcde");
 
-    std::cout << "Capacity : " << str1.capacity() << std::endl;
-    std::cout << "String Length : " << str1.length() << std::endl;
-    str1.println();
-
+    std::cout << "str1 and str2 compare : " << str1.compare(str2) << std::endl;
 }
